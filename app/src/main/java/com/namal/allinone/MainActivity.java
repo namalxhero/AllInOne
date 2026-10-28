@@ -76,7 +76,7 @@ public class MainActivity extends Activity {
             getWindow().setDecorFitsSystemWindows(false);
         } else {
             getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                    | View.SYSTEM_UI_FLAG_LAYOUT_FULL_SCREEN
+                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                     | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
         }
         getWindow().setStatusBarColor(Color.TRANSPARENT);
