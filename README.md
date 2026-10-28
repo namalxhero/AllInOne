@@ -16,3 +16,6 @@ Files go in /sdcard/AllInOne/ :
   up_param_custom.img      -> custom up_param (flash from Boot/QMG tab, BACKUP first)
   fonts/*.ttf              -> custom fonts (same file names as /system/fonts)
   sounds/<folder>/*        -> custom sounds (ringtones/notifications/ui/alarms)
+
+Intro music: a built-in tune plays on app start (speaker icon on Home toggles mute).
+To use your own song, add it as app/src/main/res/raw/intro.mp3 (lowercase name) and push.
