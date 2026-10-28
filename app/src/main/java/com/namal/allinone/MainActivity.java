@@ -61,13 +61,15 @@ public class MainActivity extends Activity {
     static final int SUB = 0xFFEDEAF7;
     static final int DIM = 0xFFC9C5DC;
     static final int ACCENT = 0xFFFFC2E2;
+    static final int GRID = 11;
+    static final int FLASH = 11;
 
     static final String[] NAMES = {"Info", "build.prop", "Backup", "Network", "Boot / QMG",
-            "UI Tweaks", "Fonts / Sounds", "Hidden", "Modules", "Scan", "Terminal"};
-    static final String[] ICONS = {"ℹ️", "🛠️", "💾", "🌐", "🚀", "🎨", "🔤", "🔓", "🧩", "🛡️", "⌨️"};
+            "UI Tweaks", "Fonts / Sounds", "Hidden", "Modules", "Scan", "Terminal", "Flasher"};
+    static final String[] ICONS = {"ℹ️", "🛠️", "💾", "🌐", "🚀", "🎨", "🔤", "🔓", "🧩", "🛡️", "⌨️", "⚡"};
     static final String[] DESC = {"Device & root info", "Edit system properties", "Backup & restore",
             "Speed & TCP tuning", "Boot logo & animation", "DPI & animations", "Custom fonts & sounds",
-            "Hidden Samsung features", "Manage modules", "Scan the phone", "Run commands"};
+            "Hidden Samsung features", "Manage modules", "Scan the phone", "Run commands", "Flash logos, images & more"};
 
     @Override
     protected void onCreate(Bundle b) {
@@ -241,11 +243,12 @@ public class MainActivity extends Activity {
         ScrollView sv = new ScrollView(this);
         sv.setVerticalScrollBarEnabled(false);
         LinearLayout list = column();
-        for (int i = 0; i < NAMES.length; i += 2) {
+        list.addView(heroCard(), lp(-1, -2, 0f, 0, dp(6), 0, dp(6)));
+        for (int i = 0; i < GRID; i += 2) {
             LinearLayout row = new LinearLayout(this);
             row.setOrientation(LinearLayout.HORIZONTAL);
             row.addView(card(i), lp(0, -1, 1f, 0, dp(6), dp(6), dp(6)));
-            if (i + 1 < NAMES.length) row.addView(card(i + 1), lp(0, -1, 1f, dp(6), dp(6), 0, dp(6)));
+            if (i + 1 < GRID) row.addView(card(i + 1), lp(0, -1, 1f, dp(6), dp(6), 0, dp(6)));
             else row.addView(new View(this), lp(0, 1, 1f, dp(6), 0, 0, 0));
             list.addView(row);
         }
@@ -452,6 +455,7 @@ public class MainActivity extends Activity {
             case 8: tabModules(); break;
             case 9: tabScan(); break;
             case 10: tabTerm(); break;
+            case 11: tabFlash(); break;
         }
     }
 
@@ -631,7 +635,7 @@ public class MainActivity extends Activity {
         act("🎞️", "Backup QMG Files", "Copies the system .qmg files to /sdcard/AllInOne/qmg_backup.", () -> runSu(
                 "mkdir -p " + DIR + "/qmg_backup && cp /system/media/*.qmg " + DIR
                         + "/qmg_backup/ && ls -l " + DIR + "/qmg_backup"));
-        act("🎬", "Install Custom QMG", "Installs .qmg files from /sdcard/AllInOne/qmg as a systemless module.", () ->
+        act("🎬", "Flash Custom QMG", "Installs .qmg files from /sdcard/AllInOne/qmg as a systemless module.", () ->
                 confirm("Install custom QMG?",
                         ".qmg files in " + DIR + "/qmg/ (named like bootsamsung.qmg, shutdown.qmg) "
                                 + "will be installed as a systemless module.",
@@ -698,7 +702,7 @@ public class MainActivity extends Activity {
         label("FONTS");
         act("🔤", "List Fonts", "Lists the font files in /system/fonts. Name your font files the same.",
                 () -> runSu("ls /system/fonts | head -n 100"));
-        act("🅰️", "Install Fonts", "Installs fonts from /sdcard/AllInOne/fonts as a module.", () ->
+        act("🅰️", "Flash Fonts", "Installs fonts from /sdcard/AllInOne/fonts as a module.", () ->
                 confirm("Install fonts?",
                         "TTF files in " + DIR + "/fonts/ must use the same names as the files in /system/fonts. "
                                 + "A wrong font can break the UI.",
@@ -712,7 +716,7 @@ public class MainActivity extends Activity {
 
         label("SOUNDS");
         act("🎵", "List Sounds", "Lists the system sound files.", () -> runSu("ls -R /system/media/audio | head -n 120"));
-        act("🔊", "Install Sounds", "Installs sounds from /sdcard/AllInOne/sounds as a module.", () ->
+        act("🔊", "Flash Sounds", "Installs sounds from /sdcard/AllInOne/sounds as a module.", () ->
                 confirm("Install sounds?",
                         "Put ringtones/ notifications/ ui/ alarms/ folders in " + DIR + "/sounds/, "
                                 + "using the same file names as the system sounds.",
@@ -870,6 +874,192 @@ public class MainActivity extends Activity {
             sb.append("Could not save report: ").append(e.getMessage()).append('\n');
         }
         return sb.toString();
+    }
+
+
+    // ---------- Flasher ----------
+
+    LinearLayout heroCard() {
+        LinearLayout c = new LinearLayout(this);
+        c.setOrientation(LinearLayout.HORIZONTAL);
+        c.setGravity(Gravity.CENTER_VERTICAL);
+        c.setPadding(dp(18), dp(16), dp(18), dp(16));
+        c.setBackground(new RippleDrawable(ColorStateList.valueOf(0x66FFFFFF), glass(24, 0x88562A8C), null));
+        c.setClickable(true);
+        TextView ic = text("⚡", 26, TXT, false);
+        ic.setGravity(Gravity.CENTER);
+        ic.setBackground(circle());
+        c.addView(ic, lp(dp(54), dp(54), 0f, 0, 0, dp(14), 0));
+        LinearLayout col = column();
+        col.addView(text("Flasher", 22, TXT, true));
+        col.addView(text(DESC[FLASH], 12, SUB, false));
+        c.addView(col, lp(0, -2, 1f, 0, 0, 0, 0));
+        c.addView(text("›", 28, TXT, true));
+        c.setOnClickListener(v -> showTab(FLASH));
+        return c;
+    }
+
+    void note(String t) {
+        panel.addView(text(t, 11, DIM, false), lp(-1, -2, 0f, dp(4), dp(2), dp(4), dp(6)));
+    }
+
+    static final java.util.Set<String> BLOCKED = new java.util.HashSet<>(java.util.Arrays.asList(
+            "bootloader", "sboot", "lk", "preloader", "tee", "efs", "sec_efs", "persist", "nvram",
+            "nvdata", "nvcfg", "proinfo", "protect1", "protect2", "md1img", "modem", "keystorage",
+            "keyrefuge", "otp", "super", "userdata", "metadata", "param", "cm"));
+
+    boolean partName(String part) {
+        if (!part.matches("[a-z0-9_]+")) {
+            out.setText("Invalid partition name (a-z 0-9 _ only)");
+            return false;
+        }
+        return true;
+    }
+
+    boolean partSafe(String part) {
+        if (!partName(part)) return false;
+        String base = part.replaceAll("_[ab]$", "");
+        if (BLOCKED.contains(base)) {
+            out.setText("Blocked for safety: " + part + "\nFlashing it can hard-brick the phone.");
+            return false;
+        }
+        return true;
+    }
+
+    void pick(String title, String globs, java.util.function.Consumer<String> cb) {
+        out.setText("Looking for files...");
+        new Thread(() -> {
+            String res = Sh.su("ls -1 " + globs + " 2>/dev/null");
+            final java.util.ArrayList<String> files = new java.util.ArrayList<>();
+            for (String l : res.split("\n")) {
+                l = l.trim();
+                if (l.startsWith("/")) files.add(l);
+            }
+            runOnUiThread(() -> {
+                if (files.isEmpty()) {
+                    out.setText("No files found.\nLooked in: " + globs);
+                    return;
+                }
+                out.setText("Pick a file...");
+                final String[] names = new String[files.size()];
+                for (int i = 0; i < names.length; i++) names[i] = files.get(i).replace("/sdcard/", "");
+                new AlertDialog.Builder(this, AlertDialog.THEME_DEVICE_DEFAULT_DARK)
+                        .setTitle(title)
+                        .setItems(names, (dlg, which) -> cb.accept(files.get(which)))
+                        .setNegativeButton("Cancel", null)
+                        .show();
+            });
+        }).start();
+    }
+
+    String flashCmd(String part, String img) {
+        return "P=/dev/block/by-name/" + part + "; I=" + Sh.q(img) + "; "
+                + "[ -e $P ] || { echo 'Partition not found: " + part + "'; exit 1; }; "
+                + "[ -f $I ] || { echo 'Image not found'; exit 1; }; "
+                + "PS=$(blockdev --getsize64 $P); IS=$(stat -c %s $I); "
+                + "if [ \"$IS\" -gt \"$PS\" ]; then echo \"Image too large ($IS > $PS)\"; exit 1; fi; "
+                + "mkdir -p " + DIR + "; B=" + DIR + "/backup_" + part + "_$(date +%s).img; "
+                + "dd if=$P of=$B bs=4096 2>/dev/null && echo \"Backup saved: $B\" "
+                + "|| { echo 'Backup failed, aborting'; exit 1; }; "
+                + "dd if=$I of=$P bs=4096 2>/dev/null && sync && echo \"Flashed to $P. Reboot to apply.\" "
+                + "|| echo 'Flash FAILED'";
+    }
+
+    String qmgCmd() {
+        return "S=" + DIR + "/qmg; D=/data/adb/modules/allinone_qmg; "
+                + "ls $S/*.qmg >/dev/null 2>&1 || { echo \"No .qmg files in $S\"; exit 1; }; "
+                + "mkdir -p $D/system/media && cp $S/*.qmg $D/system/media/ && "
+                + "printf 'id=allinone_qmg\\nname=AllInOne QMG\\nversion=1\\nversionCode=1\\n"
+                + "author=Namal\\ndescription=Custom boot animation\\n' > $D/module.prop && "
+                + "(chcon u:object_r:system_file:s0 $D/system/media/* 2>/dev/null; true) && "
+                + "ls -l $D/system/media && echo 'Reboot to apply'";
+    }
+
+    String fontsCmd() {
+        return "S=" + DIR + "/fonts; ls $S/* >/dev/null 2>&1 || { echo \"No files in $S\"; exit 1; }; "
+                + modInit("allinone_fonts", "AllInOne Fonts")
+                + " && mkdir -p $D/system/fonts && cp $S/* $D/system/fonts/ && "
+                + "(chcon -R u:object_r:system_file:s0 $D/system 2>/dev/null; true) && "
+                + "ls -l $D/system/fonts && echo 'Reboot to apply'";
+    }
+
+    String soundsCmd() {
+        return "S=" + DIR + "/sounds; ls $S/* >/dev/null 2>&1 || { echo \"No files in $S\"; exit 1; }; "
+                + modInit("allinone_sounds", "AllInOne Sounds")
+                + " && mkdir -p $D/system/media/audio && cp -r $S/. $D/system/media/audio/ && "
+                + "(chcon -R u:object_r:system_file:s0 $D/system 2>/dev/null; true) && "
+                + "echo 'Flashed. Reboot to apply.'";
+    }
+
+    String propFileCmd() {
+        return "S=" + DIR + "/system.prop; [ -f $S ] || { echo \"Missing file: $S\"; exit 1; }; "
+                + modInit("allinone_props", "AllInOne Props")
+                + " && cp $S $D/system.prop && cat $D/system.prop && echo '--- Reboot to apply'";
+    }
+
+    void tabFlash() {
+        note("Put your files in /sdcard/AllInOne/ (each item tells you where). "
+                + "Partition flashes take an automatic backup first. Use at your own risk.");
+
+        label("BOOT LOGO");
+        act("🖼️", "Flash Boot Logo", "Pick an .img and flash it to the up_param partition (auto backup).", () ->
+                pick("Pick boot logo image", DIR + "/flash/*.img " + DIR + "/up_param*.img", f ->
+                        confirm("Flash boot logo?", f + "\n\nTarget: up_param\nA backup is taken first.",
+                                () -> runSu(flashCmd("up_param", f)))));
+
+        label("BOOT ANIMATION");
+        act("🎬", "Flash Boot Animation (QMG)", "Flashes the .qmg files in /sdcard/AllInOne/qmg as a systemless module.", () ->
+                confirm("Flash boot animation?",
+                        "The .qmg files in " + DIR + "/qmg/ (named like bootsamsung.qmg, shutdown.qmg) will be installed.",
+                        () -> runSu(qmgCmd())));
+
+        label("FONTS");
+        act("🔤", "Flash Fonts", "Flashes the TTF files in /sdcard/AllInOne/fonts as a systemless module.", () ->
+                confirm("Flash fonts?",
+                        "File names must match the ones in /system/fonts. A wrong font can break the UI.",
+                        () -> runSu(fontsCmd())));
+
+        label("SOUNDS");
+        act("🔊", "Flash Sounds", "Flashes /sdcard/AllInOne/sounds (ringtones, notifications, ui, alarms) as a module.", () ->
+                confirm("Flash sounds?",
+                        "Use the same folder and file names as the system sounds.",
+                        () -> runSu(soundsCmd())));
+
+        label("BUILD PROPS");
+        act("📝", "Flash system.prop", "Flashes /sdcard/AllInOne/system.prop as a systemless module.", () ->
+                confirm("Flash system.prop?",
+                        "Every line in " + DIR + "/system.prop becomes a system property after reboot.",
+                        () -> runSu(propFileCmd())));
+
+        label("MODULE ZIP");
+        act("📦", "Flash Module Zip", "Pick a Magisk/KernelSU module .zip from /sdcard/AllInOne/flash and install it.", () ->
+                pick("Pick module zip", DIR + "/flash/*.zip", f ->
+                        confirm("Install module?", f,
+                                () -> runSu("Z=" + Sh.q(f) + "; "
+                                        + "if command -v ksud >/dev/null 2>&1; then ksud module install $Z; "
+                                        + "elif command -v magisk >/dev/null 2>&1; then magisk --install-module $Z; "
+                                        + "else echo 'Neither ksud nor magisk was found'; fi"))));
+
+        label("ADVANCED: PARTITIONS (DANGEROUS)");
+        note("Critical partitions (bootloader, efs, persist, modem, super, userdata...) are blocked.");
+        final EditText part = edit("partition  (e.g. boot, recovery, vbmeta)");
+        act("📋", "List Partitions", "Lists the partitions of this phone.", () -> runSu("ls /dev/block/by-name"));
+        act("💾", "Backup Partition", "Saves the partition above to /sdcard/AllInOne.", () -> {
+            String pn = part.getText().toString().trim();
+            if (!partName(pn)) return;
+            runSu("P=/dev/block/by-name/" + pn + "; [ -e $P ] || { echo 'Partition not found'; exit 1; }; "
+                    + "mkdir -p " + DIR + "; B=" + DIR + "/backup_" + pn + "_$(date +%s).img; "
+                    + "dd if=$P of=$B bs=4096 2>/dev/null && ls -l $B");
+        });
+        act("💥", "Flash Image to Partition", "Pick an .img from /sdcard/AllInOne/flash and flash it to the partition above.", () -> {
+            String pn = part.getText().toString().trim();
+            if (!partSafe(pn)) return;
+            pick("Pick image for " + pn, DIR + "/flash/*.img", f ->
+                    confirm("Flash " + pn + "?",
+                            f + "\n\nTarget partition: " + pn + "\nA backup is taken first.\n"
+                                    + "The wrong image can brick the phone.",
+                            () -> runSu(flashCmd(pn, f))));
+        });
     }
 
     // ---------- Terminal ----------

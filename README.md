@@ -20,3 +20,6 @@ Files go in /sdcard/AllInOne/ :
 Music: an original phonk-style loop plays while the app is open (speaker icon on Home = mute).
 To use your own song, add app/src/main/res/raw/intro.mp3 and push.
 Background: 3 animated nature scenes (Sakura Dawn, Moonlit Forest, Autumn Gale), switching every 60 seconds.
+
+Flasher (home screen, top card): flash boot logo (up_param), QMG boot animation, fonts, sounds, system.prop,
+Magisk/KSU module zips, and raw partition images. Put files in /sdcard/AllInOne/ and /sdcard/AllInOne/flash/.
