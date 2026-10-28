@@ -14,7 +14,16 @@ jobs:
       - uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: 8.7
-      - run: gradle assembleDebug
+      - name: Build
+        run: |
+          set +e
+          gradle assembleDebug --console=plain > build.log 2>&1
+          rc=$?
+          if [ $rc -ne 0 ]; then
+            msg=$(grep -nE "error:|e: |What went wrong|Execution failed|AAPT|Could not|not found" -A3 build.log | head -40 | sed 's/%/%25/g' | sed ':a;N;$!ba;s/\n/%0A/g')
+            echo "::error title=Build failed::${msg}"
+          fi
+          exit $rc
       - uses: actions/upload-artifact@v4
         with:
           name: AllInOne-debug
