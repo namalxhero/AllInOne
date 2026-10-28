@@ -1,16 +1,40 @@
 package com.namal.allinone;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStreamReader;
 
 public class Sh {
 
+    static final String[] SU_PATHS = {
+            "/system/bin/su", "/system/xbin/su", "/sbin/su", "/debug_ramdisk/su",
+            "/data/adb/ksu/bin/su", "/data/adb/ap/bin/su", "/su/bin/su",
+            "/vendor/bin/su", "/product/bin/su"
+    };
+
+    public static String findSu() {
+        for (String p : SU_PATHS) {
+            if (new File(p).exists()) return p;
+        }
+        return "su";
+    }
+
     public static String su(String cmd) {
-        return exec(new String[]{"su", "-c", cmd});
+        String r = exec(new String[]{findSu(), "-c", cmd});
+        if (r.startsWith("Error: Cannot run program")) {
+            return "❌ su හොයාගන්න බෑ.\n"
+                    + "මේ phone එකේ root නෑ, නැත්නම් Magisk/KernelSU එකෙන් "
+                    + "AllInOne එකට root permission දීලා නෑ.\n\n" + r;
+        }
+        return r;
     }
 
     public static String sh(String cmd) {
         return exec(new String[]{"sh", "-c", cmd});
+    }
+
+    public static boolean hasRoot() {
+        return su("id").contains("uid=0");
     }
 
     static String exec(String[] args) {

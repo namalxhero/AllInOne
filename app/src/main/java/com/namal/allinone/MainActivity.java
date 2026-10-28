@@ -4,14 +4,20 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.ColorStateList;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.RippleDrawable;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.text.InputType;
+import android.view.Gravity;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.HorizontalScrollView;
@@ -30,82 +36,202 @@ public class MainActivity extends Activity {
 
     LinearLayout panel;
     TextView out;
+    TextView rootChip;
+    int current = -1;
 
     static final String DIR = "/sdcard/AllInOne";
     static final String RW = "(mount -o rw,remount /system 2>&1 || mount -o rw,remount / 2>&1)";
     static final String FIND_P =
             "P=$(ls /dev/block/by-name/up_param 2>/dev/null || find /dev/block -name up_param 2>/dev/null | head -n 1); ";
 
+    static final int BG = 0xFF121418;
+    static final int CARD = 0xFF1C1F26;
+    static final int FIELD = 0xFF252932;
+    static final int ACCENT = 0xFF4F8CFF;
+    static final int TXT = 0xFFE6E8EC;
+    static final int SUB = 0xFF8A8F99;
+
+    static final String[] NAMES = {"Info", "build.prop", "Backup", "Network", "Boot / QMG",
+            "UI tweaks", "Fonts / Sounds", "Hidden", "Modules", "Scan", "Terminal"};
+    static final String[] ICONS = {"ℹ️", "🛠️", "💾", "🌐", "🚀", "🎨", "🔤", "🔓", "🧩", "🛡️", "⌨️"};
+    static final String[] DESCS = {"Device & root", "build.prop edit", "Backup / restore", "TCP, BBR, ping",
+            "Boot logo & QMG", "DPI, animation", "Fonts & sounds", "Samsung features", "Module manager",
+            "Phone scan", "Run commands"};
+
     @Override
     protected void onCreate(Bundle b) {
         super.onCreate(b);
-
-        LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(8), dp(32), dp(8), dp(8));
-
-        HorizontalScrollView hs = new HorizontalScrollView(this);
-        LinearLayout bar = new LinearLayout(this);
-        bar.setOrientation(LinearLayout.HORIZONTAL);
-        String[] names = {"Info", "build.prop", "Backup", "Network", "Boot/QMG", "UI", "Fonts/Sounds", "Hidden", "Modules", "Scan", "Terminal"};
-        for (int i = 0; i < names.length; i++) {
-            final int idx = i;
-            bar.addView(btn(names[i], () -> openTab(idx)));
-        }
-        hs.addView(bar);
-        root.addView(hs);
-
-        ScrollView ps = new ScrollView(this);
-        panel = new LinearLayout(this);
-        panel.setOrientation(LinearLayout.VERTICAL);
-        ps.addView(panel);
-        root.addView(ps, new LinearLayout.LayoutParams(-1, 0, 1f));
-
-        out = new TextView(this);
-        out.setTextIsSelectable(true);
-        out.setTextSize(11);
-        out.setTypeface(Typeface.MONOSPACE);
-        out.setText("Ready.");
-        ScrollView os = new ScrollView(this);
-        os.addView(out);
-        root.addView(os, new LinearLayout.LayoutParams(-1, 0, 1f));
-
-        setContentView(root);
-        openTab(0);
+        getWindow().setStatusBarColor(BG);
+        getWindow().setNavigationBarColor(BG);
+        showHome();
     }
 
-    // ---------- helpers ----------
+    @Override
+    public void onBackPressed() {
+        if (current >= 0) showHome();
+        else super.onBackPressed();
+    }
+
+    // ---------- screens ----------
+
+    void showHome() {
+        current = -1;
+        LinearLayout root = column();
+        root.setBackgroundColor(BG);
+        root.setPadding(dp(16), dp(36), dp(16), dp(8));
+
+        root.addView(text("AllInOne", 28, TXT, true));
+        root.addView(text("Root phone toolkit", 13, SUB, false));
+
+        rootChip = text("⏳ Root check කරනවා...", 12, SUB, false);
+        rootChip.setBackground(rr(CARD, 20));
+        rootChip.setPadding(dp(12), dp(6), dp(12), dp(6));
+        root.addView(rootChip, lp(-2, -2, 0f, 0, dp(12), 0, dp(12)));
+
+        ScrollView sv = new ScrollView(this);
+        LinearLayout list = column();
+        for (int i = 0; i < NAMES.length; i += 2) {
+            LinearLayout row = new LinearLayout(this);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.addView(card(i), lp(0, -2, 1f, 0, dp(6), dp(6), dp(6)));
+            if (i + 1 < NAMES.length) row.addView(card(i + 1), lp(0, -2, 1f, dp(6), dp(6), 0, dp(6)));
+            else row.addView(new View(this), lp(0, 1, 1f, dp(6), 0, 0, 0));
+            list.addView(row);
+        }
+        sv.addView(list);
+        root.addView(sv, lp(-1, 0, 1f, 0, 0, 0, 0));
+        setContentView(root);
+
+        new Thread(() -> {
+            final boolean r = Sh.hasRoot();
+            runOnUiThread(() -> {
+                if (rootChip == null) return;
+                rootChip.setText(r ? "🟢 Root OK" : "🔴 Root නෑ (su හොයාගන්න බෑ)");
+                rootChip.setTextColor(r ? 0xFF4ADE80 : 0xFFFF6B6B);
+            });
+        }).start();
+    }
+
+    LinearLayout card(int i) {
+        LinearLayout c = column();
+        c.setPadding(dp(16), dp(16), dp(16), dp(16));
+        c.setMinimumHeight(dp(108));
+        c.setBackground(ripple(CARD, 20));
+        c.setClickable(true);
+        c.addView(text(ICONS[i], 28, TXT, false));
+        c.addView(text(NAMES[i], 15, TXT, true), lp(-2, -2, 0f, 0, dp(8), 0, 0));
+        c.addView(text(DESCS[i], 11, SUB, false));
+        c.setOnClickListener(v -> showTab(i));
+        return c;
+    }
+
+    void showTab(int i) {
+        current = i;
+        LinearLayout root = column();
+        root.setBackgroundColor(BG);
+        root.setPadding(dp(14), dp(36), dp(14), dp(8));
+
+        LinearLayout top = new LinearLayout(this);
+        top.setOrientation(LinearLayout.HORIZONTAL);
+        top.setGravity(Gravity.CENTER_VERTICAL);
+        TextView back = text("←", 24, TXT, true);
+        back.setPadding(dp(4), dp(4), dp(16), dp(4));
+        back.setOnClickListener(v -> showHome());
+        top.addView(back);
+        top.addView(text(ICONS[i] + "  " + NAMES[i], 20, TXT, true));
+        root.addView(top, lp(-1, -2, 0f, 0, 0, 0, dp(8)));
+
+        ScrollView ps = new ScrollView(this);
+        panel = column();
+        ps.addView(panel);
+        root.addView(ps, lp(-1, 0, 1f, 0, 0, 0, 0));
+
+        out = text("Ready.", 11, 0xFFCDE7D8, false);
+        out.setTypeface(Typeface.MONOSPACE);
+        out.setTextIsSelectable(true);
+        out.setPadding(dp(12), dp(10), dp(12), dp(10));
+        ScrollView os = new ScrollView(this);
+        os.setBackground(rr(FIELD, 14));
+        os.addView(out);
+        root.addView(os, lp(-1, 0, 0.8f, 0, dp(8), 0, 0));
+
+        setContentView(root);
+        openTab(i);
+    }
+
+    // ---------- ui helpers ----------
 
     int dp(int x) {
         return (int) (x * getResources().getDisplayMetrics().density);
+    }
+
+    LinearLayout column() {
+        LinearLayout l = new LinearLayout(this);
+        l.setOrientation(LinearLayout.VERTICAL);
+        return l;
+    }
+
+    LinearLayout.LayoutParams lp(int w, int h, float wt, int l, int t, int r, int b) {
+        LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(w, h, wt);
+        p.setMargins(l, t, r, b);
+        return p;
+    }
+
+    GradientDrawable rr(int color, int radiusDp) {
+        GradientDrawable g = new GradientDrawable();
+        g.setColor(color);
+        g.setCornerRadius(dp(radiusDp));
+        return g;
+    }
+
+    Drawable ripple(int color, int radiusDp) {
+        return new RippleDrawable(ColorStateList.valueOf(0x33FFFFFF), rr(color, radiusDp), null);
+    }
+
+    TextView text(String s, int sp, int color, boolean bold) {
+        TextView t = new TextView(this);
+        t.setText(s);
+        t.setTextSize(sp);
+        t.setTextColor(color);
+        if (bold) t.setTypeface(Typeface.DEFAULT_BOLD);
+        return t;
     }
 
     Button btn(String t, Runnable r) {
         Button x = new Button(this);
         x.setText(t);
         x.setAllCaps(false);
+        x.setTextColor(TXT);
+        x.setTextSize(14);
+        x.setGravity(Gravity.CENTER_VERTICAL | Gravity.START);
+        x.setStateListAnimator(null);
+        x.setBackground(ripple(CARD, 14));
+        x.setPadding(dp(16), dp(12), dp(16), dp(12));
         x.setOnClickListener(v -> r.run());
+        x.setLayoutParams(lp(-1, -2, 0f, 0, dp(4), 0, dp(4)));
         return x;
     }
 
     EditText edit(String hint) {
         EditText e = new EditText(this);
         e.setHint(hint);
-        e.setTextSize(13);
+        e.setHintTextColor(SUB);
+        e.setTextColor(TXT);
+        e.setTextSize(14);
+        e.setBackground(rr(FIELD, 12));
+        e.setPadding(dp(14), dp(12), dp(14), dp(12));
+        e.setLayoutParams(lp(-1, -2, 0f, 0, dp(4), 0, dp(4)));
         return e;
     }
 
     TextView label(String t) {
-        TextView v = new TextView(this);
-        v.setText(t);
-        v.setTextSize(13);
-        v.setTypeface(Typeface.DEFAULT_BOLD);
-        v.setPadding(dp(4), dp(12), dp(4), dp(4));
+        TextView v = text(t.toUpperCase(), 12, ACCENT, true);
+        v.setLayoutParams(lp(-1, -2, 0f, dp(4), dp(16), 0, dp(4)));
         return v;
     }
 
     void confirm(String title, String msg, Runnable r) {
-        new AlertDialog.Builder(this)
+        new AlertDialog.Builder(this, AlertDialog.THEME_DEVICE_DEFAULT_DARK)
                 .setTitle(title)
                 .setMessage(msg)
                 .setPositiveButton("හරි", (d, w) -> r.run())
@@ -132,7 +258,6 @@ public class MainActivity extends Activity {
     }
 
     void openTab(int i) {
-        panel.removeAllViews();
         switch (i) {
             case 0: tabInfo(); break;
             case 1: tabProp(); break;
@@ -151,7 +276,7 @@ public class MainActivity extends Activity {
     // ---------- Info ----------
 
     void tabInfo() {
-        panel.addView(btn("Root check", () -> runSu("id")));
+        panel.addView(btn("Root check", () -> bg(() -> "su path: " + Sh.findSu() + "\n" + Sh.su("id"))));
         panel.addView(btn("Device / system info", () -> bg(this::deviceInfo)));
     }
 
