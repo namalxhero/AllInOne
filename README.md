@@ -17,5 +17,6 @@ Files go in /sdcard/AllInOne/ :
   fonts/*.ttf              -> custom fonts (same file names as /system/fonts)
   sounds/<folder>/*        -> custom sounds (ringtones/notifications/ui/alarms)
 
-Intro music: a built-in tune plays on app start (speaker icon on Home toggles mute).
-To use your own song, add it as app/src/main/res/raw/intro.mp3 (lowercase name) and push.
+Music: an original phonk-style loop plays while the app is open (speaker icon on Home = mute).
+To use your own song, add app/src/main/res/raw/intro.mp3 and push.
+Background: 3 animated nature scenes (Sakura Dawn, Moonlit Forest, Autumn Gale), switching every 60 seconds.

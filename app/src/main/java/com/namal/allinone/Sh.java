@@ -22,9 +22,9 @@ public class Sh {
     public static String su(String cmd) {
         String r = exec(new String[]{findSu(), "-c", cmd});
         if (r.startsWith("Error: Cannot run program")) {
-            return "❌ su හොයාගන්න බෑ.\n"
-                    + "මේ phone එකේ root නෑ, නැත්නම් Magisk/KernelSU එකෙන් "
-                    + "AllInOne එකට root permission දීලා නෑ.\n\n" + r;
+            return "su not found.\n"
+                    + "This phone has no root, or Magisk/KernelSU has not granted "
+                    + "root permission to AllInOne.\n\n" + r;
         }
         return r;
     }
